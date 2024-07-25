@@ -241,7 +241,38 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(row => {
                 const cols = row.querySelectorAll("td, th");
                 return Array.from(cols)
-                    .map(col => `"${col.innerText.replace(/"/g, '""')}"`)
+                    .map(col => {
+                        let textContent = col.innerText.trim();
+                        
+                        // Extract checkboxes if they exist
+                        let checkboxes = col.querySelectorAll('input[type="checkbox"]');
+                        if (checkboxes.length > 0) {
+                            let checkedValues = Array.from(checkboxes)
+                                .filter(checkbox => checkbox.checked)
+                                .map(checkbox => checkbox.dataset.type || "Checked")
+                                .join(", "); // Combine all checked values
+                            
+                            // Only include checked values if any are selected
+                            if (checkedValues.length > 0) {
+                                textContent = checkedValues;
+                            } else {
+                                // If no checkboxes are checked, ensure no default values are included
+                                textContent = "";
+                            }
+                        }
+    
+                        // Check for diamonds and add their state
+                        let diamond = col.querySelector('.diamond');
+                        if (diamond) {
+                            if (diamond.classList.contains("run-scored")) {
+                                textContent += textContent ? " | RUN" : "RUN";
+                            } else if (diamond.classList.contains("out")) {
+                                textContent += textContent ? " | OUT" : "OUT";
+                            }
+                        }
+    
+                        return `"${textContent.replace(/"/g, '""')}"`; // Ensure quotes are escaped
+                    })
                     .join(",");
             })
             .join("\n");
@@ -254,6 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Trigger the download
         link.click();
     }
+    
     
     // Event listener for export button
     document.getElementById("exportCSV").addEventListener("click", function () {
