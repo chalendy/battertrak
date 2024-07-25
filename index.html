@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baseball Scorecard PWA</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Player</th>
+                    <th class="inning">1</th>
+                    <th class="inning">2</th>
+                    <th class="inning">3</th>
+                    <th class="inning">4</th>
+                    <th class="inning">5</th>
+                    <th class="inning">6</th>
+                    <th class="inning">7</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows for players will go here -->
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2">Runs</td>
+                    <td class="inning"><input type="number" id="runs-inning-1" readonly></td>
+                    <td class="inning"><input type="number" id="runs-inning-2" readonly></td>
+                    <td class="inning"><input type="number" id="runs-inning-3" readonly></td>
+                    <td class="inning"><input type="number" id="runs-inning-4" readonly></td>
+                    <td class="inning"><input type="number" id="runs-inning-5" readonly></td>
+                    <td class="inning"><input type="number" id="runs-inning-6" readonly></td>
+                    <td class="inning"><input type="number" id="runs-inning-7" readonly></td>
+                </tr>
+                <tr>
+                    <td colspan="2">Opposing Runs</td>
+                    <td class="inning"><input type="text" id="opposing-runs-inning-1" value="0"></td>
+                    <td class="inning"><input type="text" id="opposing-runs-inning-2" value="0"></td>
+                    <td class="inning"><input type="text" id="opposing-runs-inning-3" value="0"></td>
+                    <td class="inning"><input type="text" id="opposing-runs-inning-4" value="0"></td>
+                    <td class="inning"><input type="text" id="opposing-runs-inning-5" value="0"></td>
+                    <td class="inning"><input type="text" id="opposing-runs-inning-6" value="0"></td>
+                    <td class="inning"><input type="text" id="opposing-runs-inning-7" value="0"></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div id="scoreboard">
+            <div id="runs">
+                <div id="totalRuns">Total Runs: 0</div>
+                <div id="totalOpposingRuns">Total Opposing Runs: 0</div>
+            </div>
+            <div id="inning-info">
+                <div id="currentInning">Current Inning: 1</div>
+                <div id="currentOuts">Outs in Current Inning: 0</div>
+            </div>
+        </div>
+        <div id="playerControl">
+            <button id="decreasePlayers">-</button>
+            <span id="currentPlayers">10</span>
+            <button id="increasePlayers">+</button>
+        </div>
+    </main>
+    <script src="scripts.js"></script>
+</body>
+</html>
