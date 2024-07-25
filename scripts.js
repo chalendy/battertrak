@@ -87,10 +87,10 @@ document.addEventListener("DOMContentLoaded", () => {
             totalOpposingRuns += opposingRunCount;
         }
 
-        totalRunsDisplay.textContent = `Total Runs: ${totalRuns}`;
-        totalOpposingRunsDisplay.textContent = `Total Opposing Runs: ${totalOpposingRuns}`;
-        currentInningDisplay.textContent = `Current Inning: ${lastInningWithData}`;
-        currentOutsDisplay.textContent = `Outs in Current Inning: ${outsInCurrentInning}`;
+        totalRunsDisplay.textContent = `Home: ${totalRuns}`;
+        totalOpposingRunsDisplay.textContent = `Away: ${totalOpposingRuns}`;
+        currentInningDisplay.textContent = `Inning: ${lastInningWithData}`;
+        currentOutsDisplay.textContent = `Outs: ${outsInCurrentInning}`;
     }
 
     function addPlayerRow(rowCount) {
@@ -132,14 +132,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const label = event.currentTarget;
         const checkbox = label.querySelector("input[type='checkbox']");
         const parentRow = label.closest('tr');
-        
-        // Toggle the checked state of the clicked label
+        const inningIndex = Array.from(parentRow.querySelectorAll('.inning')).indexOf(label.closest('.inning')) + 1;
+
+        // Find all labels in the same inning and row
+        const labelsInInning = parentRow.querySelectorAll(`.inning:nth-child(${inningIndex + 2}) .score-options label`);
+
         if (checkbox.checked) {
+            // If the checkbox is already checked, uncheck it
             checkbox.checked = false;
             label.classList.remove("checked");
         } else {
-            // Uncheck all labels in the same row
-            parentRow.querySelectorAll(".score-options label").forEach(lbl => {
+            // Uncheck all labels in the same inning
+            labelsInInning.forEach(lbl => {
                 lbl.querySelector("input[type='checkbox']").checked = false;
                 lbl.classList.remove("checked");
             });
@@ -148,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
             checkbox.checked = true;
             label.classList.add("checked");
         }
-        
+
         // Update run count to reflect new state
         updateRunCount();
     }
@@ -228,4 +232,92 @@ document.addEventListener("DOMContentLoaded", () => {
     opposingInningsInputs.forEach(input => {
         input.addEventListener("input", updateRunCount);
     });
+
+    function exportTableToCSV(filename) {
+        const table = document.querySelector("table");
+        const rows = table.querySelectorAll("tr");
+    
+        let csvContent = Array.from(rows)
+            .map(row => {
+                const cols = row.querySelectorAll("td, th");
+                return Array.from(cols)
+                    .map(col => `"${col.innerText.replace(/"/g, '""')}"`)
+                    .join(",");
+            })
+            .join("\n");
+    
+        // Create a link to download the CSV file
+        const link = document.createElement("a");
+        link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+        link.download = filename;
+    
+        // Trigger the download
+        link.click();
+    }
+    
+    // Event listener for export button
+    document.getElementById("exportCSV").addEventListener("click", function () {
+        exportTableToCSV("baseball_scorecard.csv");
+    });
+    
+    function exportTableToExcel(filename) {
+        // Create a new workbook and worksheet
+        const workbook = XLSX.utils.book_new();
+        const table = document.querySelector("table");
+        const rows = table.querySelectorAll("tr");
+    
+        // Extract the table data into an array
+        let data = Array.from(rows).map(row => 
+            Array.from(row.querySelectorAll("td, th")).map(cell => {
+                let textContent = cell.innerText.trim();
+    
+                // Extract checkboxes if they exist
+                let checkboxes = cell.querySelectorAll('input[type="checkbox"]');
+                if (checkboxes.length > 0) {
+                    let checkedValues = Array.from(checkboxes)
+                        .filter(checkbox => checkbox.checked)
+                        .map(checkbox => checkbox.dataset.type || "Checked")
+                        .join(", "); // Combine all checked values
+    
+                    // Only include checked values if any are selected
+                    if (checkedValues.length > 0) {
+                        textContent = checkedValues;
+                    } else {
+                        // If no checkboxes are checked, ensure no default values are included
+                        textContent = "";
+                    }
+                }
+    
+                // Check for diamonds and add their state
+                let diamond = cell.querySelector('.diamond');
+                if (diamond) {
+                    if (diamond.classList.contains("run-scored")) {
+                        textContent += textContent ? " | RUN" : "RUN";
+                    } else if (diamond.classList.contains("out")) {
+                        textContent += textContent ? " | OUT" : "OUT";
+                    }
+                }
+    
+                return textContent || ""; // Return the combined text content or empty if no relevant data
+            })
+        );
+    
+        // Convert the array to a worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet(data);
+    
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Scorecard");
+    
+        // Generate the Excel file and download it
+        XLSX.writeFile(workbook, filename);
+    }
+    
+    
+
+   
+    // Event listener for the export button
+    document.getElementById("exportExcel").addEventListener("click", function () {
+        exportTableToExcel("baseball_scorecard.xlsx");
+    });
+    
 });

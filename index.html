@@ -50,20 +50,24 @@
         </table>
         <div id="scoreboard">
             <div id="runs">
-                <div id="totalRuns">Total Runs: 0</div>
-                <div id="totalOpposingRuns">Total Opposing Runs: 0</div>
+                <div id="totalRuns">Home: 0</div>
+                <div id="totalOpposingRuns">Away: 0</div>
             </div>
             <div id="inning-info">
-                <div id="currentInning">Current Inning: 1</div>
-                <div id="currentOuts">Outs in Current Inning: 0</div>
+                <div id="currentInning">Inning: 1</div>
+                <div id="currentOuts">Outs: 0</div>
             </div>
         </div>
         <div id="playerControl">
             <button id="decreasePlayers">-</button>
             <span id="currentPlayers">10</span>
             <button id="increasePlayers">+</button>
+            <button id="exportCSV">Export CSV</button> <!-- CSV Export button -->
+            <button id="exportExcel">Export to Excel</button> <!-- Excel Export button -->
         </div>
     </main>
     <script src="scripts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
 </body>
 </html>
