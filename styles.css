@@ -22,6 +22,7 @@ table {
     margin: 0 auto;
     padding: 0 20px;
     box-sizing: border-box;
+    
 }
 
 th, td {
@@ -29,10 +30,13 @@ th, td {
     padding: 8px;
     text-align: center;
     box-sizing: border-box;
+    
 }
 
 th {
-    background-color: #f4f4f4;
+    background-color: #333; /* Default color */
+    color: #ffffff; /* Optional: Change text color */
+
 }
 
 input[type="number"] {
@@ -51,6 +55,7 @@ input[type="number"] {
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    background-color: #f0f0f0; /* Default color */
 }
 
 .diamond:before {
@@ -124,6 +129,7 @@ input[type="number"] {
     align-items: center;
     gap: 5px;
     margin-bottom: 5px;
+    
 }
 
 .score-options .top-row {
@@ -168,6 +174,7 @@ input[type="number"] {
     pointer-events: none;
     transition: opacity 0.3s;
     box-sizing: border-box;
+    
 }
 
 .score-options label.checked::before {
@@ -180,40 +187,158 @@ input[type="number"] {
     padding: 2px 5px;
 }
 
-/* Floating Scoreboard Styling */
-#scoreboard {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background-color: white;
-    padding: 10px;
-    border: 1px solid #ddd;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-#scoreboard #runs {
-    margin-bottom: 10px;
-}
-
 /* Floating Inning Info Styling */
-#inning-info {
-    position: fixed;
-    top: 10px;
-    right: 200px; /* Adjust to ensure it's next to the scoreboard */
-    background-color: white;
-    padding: 10px;
-    border: 1px solid #ddd;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
+
 tfoot input[type="number"], 
 tfoot input[type="text"] {
     width: 50px; /* Adjust the width to match your design */
+}
+/* Floating Navbar Styling */
+#navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+    color: white;
+    display: flex;
+    justify-content: space-between; /* Space out buttons evenly */
+    align-items: center;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Container for central content */
+#navbar .central-info {
+    display: grid;
+    grid-template-columns: repeat(4, auto); /* Four columns of automatic width */
+    grid-gap: 20px; /* Space between columns */
+    align-items: center; /* Center align items vertically */
+    flex-grow: 1; /* Take up available space */
+    justify-content: center; /* Center content horizontally */
+}
+
+/* Central info items styling */
+.info-item {
+    display: flex;
+    flex-direction: column; /* Stack label and value vertically */
+    align-items: center; /* Center align text horizontally */
+    
+}
+
+#navbar button {
+    background-color: #555;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#navbar button:hover {
+    background-color: #777;
+}
+
+#navbar button:disabled {
+    background-color: #888;
+    cursor: not-allowed;
+}
+
+#navbar button:not(:disabled):hover {
+    background-color: #444;
+}
+
+/* Dragging state styling */
+.dragging {
+    opacity: 0.5; /* Optional: keep opacity change */
+    transform: scale(1.1); /* Scale up the dragged element */
+    border: 2px solid #000; /* Add a border to make it stand out */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Add shadow for better visibility */
+}
+
+/* Optional: if you want the target area to have a visual indicator */
+.dragging + tr {
+    border-top: 2px solid #000; /* Existing border styling for target area */
+}
+/* Dropdown container */
+.dropdown {
+    margin-left: auto; /* Push dropdowns to the right */
+}
+
+/* Dropdown button */
+.dropdown-toggle {
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    padding: 10px; /* Padding */
+    border: none; /* Remove border */
+    cursor: pointer; /* Pointer cursor */
+    font-size: 14px; /* Adjust font size */
+    border-radius: 4px; /* Optional: add rounded corners */
+    display: flex; /* Ensure icon and text are aligned */
+    align-items: center; /* Vertically center content */
+    gap: 8px; /* Space between text and icon */
+}
+
+/* Dropdown menu (hidden by default) */
+.dropdown-menu {
+    display: none; /* Hidden by default */
+    position: absolute; /* Positioned relative to dropdown container */
+    background-color: #d35623; /* White background */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); /* Shadow for dropdown */
+    z-index: 1; /* On top of other elements */
+    min-width: 160px; /* Minimum width */
+}
+
+/* Dropdown menu buttons */
+.dropdown-menu button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background-color: white;
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+}
+
+.dropdown-menu button:hover {
+    background-color: #f1f1f1;
+}
+
+/* Show dropdown menu on hover or click */
+.dropdown:hover .dropdown-menu,
+.dropdown:focus .dropdown-menu {
+    display: block; /* Display dropdown */
+}
+
+/* Custom icon styling */
+.custom-icon {
+    width: 16px; /* Set your desired icon width */
+    height: 16px; /* Set your desired icon height */
+    vertical-align: middle; /* Align icon vertically with text */
+}
+#logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between logo and text */
+}
+
+/* Logo image styling */
+#logo {
+    width: 40px; /* Adjust size as needed */
+    height: auto; /* Maintain aspect ratio */
+}
+/* Logo text image styling */
+#logo-text {
+    width: 150px; /* Adjust size as needed */
+    height: auto; /* Maintain aspect ratio */
+}
+
+/* Default grey for inactive cells */
+.inning-cell {
+    background-color: #f0f0f0;
+    color: white; /* Adjust text color for better contrast if needed */
 }

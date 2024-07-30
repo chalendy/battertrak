@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const increasePlayersButton = document.getElementById("increasePlayers");
-    const decreasePlayersButton = document.getElementById("decreasePlayers");
+    const increasePlayersButton = document.getElementById('increasePlayers');
+    const decreasePlayersButton = document.getElementById('decreasePlayers');
     const currentPlayersDisplay = document.getElementById("currentPlayers");
     const totalRunsDisplay = document.getElementById("totalRuns");
     const totalOpposingRunsDisplay = document.getElementById("totalOpposingRuns");
@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const MAX_PLAYERS = 20;
     const MIN_PLAYERS = 10;
     let currentPlayers = MIN_PLAYERS;
+    let draggedRow = null;  // Store reference to the dragged row
 
     function toggleDiamond(diamond) {
         if (diamond.classList.contains("run-scored")) {
@@ -30,78 +31,88 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateRunCount() {
         const rows = document.querySelectorAll("tbody tr");
-
+    
         let totalRuns = 0;
         let totalOpposingRuns = 0;
         let lastInningWithData = 1; // Default to inning 1
         let outsInCurrentInning = 0;
-
+    
         for (let inning = 1; inning <= 7; inning++) {
             let runCount = 0;
             let opposingRunCount = 0;
             let inningHasData = false;
             let inningOuts = 0;
-
+    
             rows.forEach(row => {
-                const diamond = row.querySelector(`.inning:nth-child(${inning + 2}) .diamond`);
-                if (diamond) {
-                    if (diamond.classList.contains("run-scored")) {
-                        runCount++;
-                        inningHasData = true;
-                    }
-                    if (diamond.classList.contains("out")) {
-                        inningHasData = true;
-                        inningOuts++;
-                    }
+                const inningCell = row.querySelector(`.inning:nth-child(${inning + 2})`);
+                const diamond = inningCell.querySelector(".diamond");
+                const scoreOptions = inningCell.querySelector(".score-options");
+    
+                // Check diamond state and score options
+                let diamondClass = diamond ? diamond.classList : [];
+                let hasScoreOptionsChecked = scoreOptions && scoreOptions.querySelector("input[type='checkbox']:checked");
+    
+                // Determine if the cell should be grey
+                if (!diamondClass.contains("run-scored") && !diamondClass.contains("out") && !hasScoreOptionsChecked) {
+                    inningCell.style.backgroundColor = '#f0f0f0';
+                } else {
+                    inningCell.style.backgroundColor = ''; // Reset to default
+                }
+    
+                // Count runs and outs
+                if (diamondClass.contains("run-scored")) {
+                    runCount++;
+                    inningHasData = true;
+                }
+                if (diamondClass.contains("out")) {
+                    inningHasData = true;
+                    inningOuts++;
                 }
                 
                 // Check if any checkbox is checked in the current inning
-                const scoreOptions = row.querySelector(`.inning:nth-child(${inning + 2}) .score-options`);
-                if (scoreOptions) {
-                    const checkedCheckboxes = scoreOptions.querySelectorAll("input[type='checkbox']:checked");
-                    if (checkedCheckboxes.length > 0) {
+                if (hasScoreOptionsChecked) {
+                    inningHasData = true;
+                }
+    
+                const runInput = document.getElementById(`runs-inning-${inning}`);
+                runInput.value = runCount;
+    
+                const opposingRunInput = document.getElementById(`opposing-runs-inning-${inning}`);
+                if (opposingRunInput.value.trim() !== "") {
+                    opposingRunCount = parseInt(opposingRunInput.value) || 0;
+                    if (opposingRunCount > 0 || runCount > 0) {
                         inningHasData = true;
                     }
                 }
+    
+                if (inningHasData) {
+                    lastInningWithData = inning;
+                    if (inning === lastInningWithData) {
+                        outsInCurrentInning = inningOuts;
+                    }
+                }
+    
+                totalRuns += runCount;
+                totalOpposingRuns += opposingRunCount;
             });
-
-            const runInput = document.getElementById(`runs-inning-${inning}`);
-            runInput.value = runCount;
-
-            const opposingRunInput = document.getElementById(`opposing-runs-inning-${inning}`);
-            if (opposingRunInput.value.trim() !== "") {
-                opposingRunCount = parseInt(opposingRunInput.value) || 0;
-                if (opposingRunCount > 0 || runCount > 0) {
-                    inningHasData = true;
-                }
-            }
-
-            if (inningHasData) {
-                lastInningWithData = inning;
-                if (inning === lastInningWithData) {
-                    outsInCurrentInning = inningOuts;
-                }
-            }
-
-            totalRuns += runCount;
-            totalOpposingRuns += opposingRunCount;
+    
+            totalRunsDisplay.textContent = `${totalRuns}`;
+            totalOpposingRunsDisplay.textContent = `${totalOpposingRuns}`;
+            currentInningDisplay.textContent = `Inning: ${lastInningWithData}`;
+            currentOutsDisplay.textContent = `Outs: ${outsInCurrentInning}`;
         }
-
-        totalRunsDisplay.textContent = `Home: ${totalRuns}`;
-        totalOpposingRunsDisplay.textContent = `Away: ${totalOpposingRuns}`;
-        currentInningDisplay.textContent = `Inning: ${lastInningWithData}`;
-        currentOutsDisplay.textContent = `Outs: ${outsInCurrentInning}`;
     }
+    
 
     function addPlayerRow(rowCount) {
         const tableBody = document.querySelector("tbody");
         const newRow = document.createElement("tr");
-
+    
         newRow.innerHTML = `
             <td>${rowCount}</td>
-            <td contenteditable="true">Player Name</td>
+            <td contenteditable="true" class="editable-player-name" data-original="Player Name">Player Name</td>
             ${Array.from({ length: 7 }, (_, i) => `
-                <td class="inning">
+                <td class="inning untouched" data-original="">
                     <div class="score-options">
                         <div class="top-row">
                             <label><input type="checkbox" class="hit-checkbox" data-type="1B"> 1B</label>
@@ -118,14 +129,56 @@ document.addEventListener("DOMContentLoaded", () => {
             `).join('')}
         `;
         tableBody.appendChild(newRow);
-
-        // Add event listeners for diamond clicks and label clicks
-        newRow.querySelectorAll(".diamond").forEach(diamond => 
+    
+         // Add event listeners for diamond clicks and label clicks
+         newRow.querySelectorAll(".diamond").forEach(diamond => 
             diamond.addEventListener("click", handleDiamondClick)
         );
         newRow.querySelectorAll(".score-options label").forEach(label => 
             label.addEventListener("click", handleLabelClick)
         );
+
+        // Add event listener to handle player name cell editing
+        newRow.querySelectorAll(".editable-player-name").forEach(cell => 
+            cell.addEventListener("focus", handlePlayerNameFocus)
+        );
+
+        // Add drag-and-drop functionality
+        newRow.draggable = true;
+        newRow.addEventListener('dragstart', () => {
+            draggedRow = newRow;
+        });
+    
+        newRow.addEventListener('dragover', (event) => {
+            event.preventDefault();
+        });
+    
+        newRow.addEventListener('drop', () => {
+            if (draggedRow !== newRow) {
+                const rows = Array.from(document.querySelectorAll('tbody tr'));
+                const draggedIndex = rows.indexOf(draggedRow);
+                const targetIndex = rows.indexOf(newRow);
+    
+                if (draggedIndex > targetIndex) {
+                    newRow.before(draggedRow);
+                } else {
+                    newRow.after(draggedRow);
+                }
+            }
+        });
+    
+        newRow.addEventListener('dragend', () => {
+            draggedRow = null;
+        });
+    }
+    
+    
+
+    function handlePlayerNameFocus(event) {
+        const cell = event.target;
+        if (cell.innerText === "Player Name") {
+            cell.innerText = ""; // Clear the cell
+        }
     }
 
     function handleLabelClick(event) {
@@ -133,10 +186,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const checkbox = label.querySelector("input[type='checkbox']");
         const parentRow = label.closest('tr');
         const inningIndex = Array.from(parentRow.querySelectorAll('.inning')).indexOf(label.closest('.inning')) + 1;
-
+    
         // Find all labels in the same inning and row
         const labelsInInning = parentRow.querySelectorAll(`.inning:nth-child(${inningIndex + 2}) .score-options label`);
-
+    
         if (checkbox.checked) {
             // If the checkbox is already checked, uncheck it
             checkbox.checked = false;
@@ -147,12 +200,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 lbl.querySelector("input[type='checkbox']").checked = false;
                 lbl.classList.remove("checked");
             });
-
+    
             // Check the clicked label
             checkbox.checked = true;
             label.classList.add("checked");
         }
-
+    
         // Update run count to reflect new state
         updateRunCount();
     }
@@ -203,14 +256,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         updateRunCount();
     }
-
-    // Initialize the table
-    addInitialRows();
-
+       
     increasePlayersButton.addEventListener("click", () => {
         if (currentPlayers < MAX_PLAYERS) {
             currentPlayers++;
             updatePlayersDisplay();
+            
         }
     });
 
@@ -221,10 +272,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Update run count, current inning, and current outs initially
-    updateRunCount();
-
-    // Optional: Add event listeners to input fields to update run counts dynamically
     inningsInputs.forEach(input => {
         input.addEventListener("input", updateRunCount);
     });
@@ -232,6 +279,16 @@ document.addEventListener("DOMContentLoaded", () => {
     opposingInningsInputs.forEach(input => {
         input.addEventListener("input", updateRunCount);
     });
+
+    document.getElementById("exportCSV").addEventListener("click", () => {
+        exportTableToCSV("scorecard.csv");
+    });
+
+    document.getElementById("exportExcel").addEventListener("click", () => {
+        exportTableToExcel("scorecard.xlsx");
+    });
+
+    addInitialRows();
 
     function exportTableToCSV(filename) {
         const table = document.querySelector("table");
@@ -241,38 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(row => {
                 const cols = row.querySelectorAll("td, th");
                 return Array.from(cols)
-                    .map(col => {
-                        let textContent = col.innerText.trim();
-                        
-                        // Extract checkboxes if they exist
-                        let checkboxes = col.querySelectorAll('input[type="checkbox"]');
-                        if (checkboxes.length > 0) {
-                            let checkedValues = Array.from(checkboxes)
-                                .filter(checkbox => checkbox.checked)
-                                .map(checkbox => checkbox.dataset.type || "Checked")
-                                .join(", "); // Combine all checked values
-                            
-                            // Only include checked values if any are selected
-                            if (checkedValues.length > 0) {
-                                textContent = checkedValues;
-                            } else {
-                                // If no checkboxes are checked, ensure no default values are included
-                                textContent = "";
-                            }
-                        }
-    
-                        // Check for diamonds and add their state
-                        let diamond = col.querySelector('.diamond');
-                        if (diamond) {
-                            if (diamond.classList.contains("run-scored")) {
-                                textContent += textContent ? " | RUN" : "RUN";
-                            } else if (diamond.classList.contains("out")) {
-                                textContent += textContent ? " | OUT" : "OUT";
-                            }
-                        }
-    
-                        return `"${textContent.replace(/"/g, '""')}"`; // Ensure quotes are escaped
-                    })
+                    .map(col => `"${col.innerText.replace(/"/g, '""')}"`)
                     .join(",");
             })
             .join("\n");
@@ -285,7 +311,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // Trigger the download
         link.click();
     }
-    
     
     // Event listener for export button
     document.getElementById("exportCSV").addEventListener("click", function () {
@@ -352,4 +377,152 @@ document.addEventListener("DOMContentLoaded", () => {
         exportTableToExcel("baseball_scorecard.xlsx");
     });
     
+        // Function to clear inning data
+        function clearInningData() {
+            const rows = document.querySelectorAll("tbody tr");
+    
+            rows.forEach(row => {
+                // Clear all checkboxes in the inning columns
+                const checkboxes = row.querySelectorAll(".inning .score-options input[type='checkbox']");
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                    checkbox.closest('label').classList.remove("checked");
+                });
+    
+                // Reset all diamonds to their initial state
+                const diamonds = row.querySelectorAll(".inning .diamond");
+                diamonds.forEach(diamond => {
+                    diamond.classList.remove("run-scored", "out");
+                    diamond.removeAttribute("data-label");
+                });
+            });
+    
+            // Clear the inning run count inputs
+            inningsInputs.forEach(input => {
+                input.value = "0";
+            });
+    
+            // Clear the opposing runs inputs
+            opposingInningsInputs.forEach(input => {
+                input.value = "0";
+            });
+    
+            // Update run count after clearing data
+            updateRunCount();
+        }
+    
+        // Event listener for the Clear Data button
+        const clearDataButton = document.getElementById("clearData");
+        clearDataButton.addEventListener("click", clearInningData);
+    
+        // Existing code...
+    
+        // Initial setup
+        addInitialRows();
+
+        function shufflePlayerRows() {
+            const tableBody = document.querySelector("tbody");
+            const rows = Array.from(tableBody.querySelectorAll("tr"));
+    
+            // Fisher-Yates Shuffle algorithm
+            for (let i = rows.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [rows[i], rows[j]] = [rows[j], rows[i]];
+            }
+    
+            // Clear the table body and append the shuffled rows
+            tableBody.innerHTML = '';
+            rows.forEach(row => tableBody.appendChild(row));
+    
+            // Re-initialize drag and drop functionality
+            initializeDragAndDrop();
+        }
+    
+        // Event listener for the Shuffle Players button
+        const shufflePlayersButton = document.getElementById("shufflePlayers");
+        shufflePlayersButton.addEventListener("click", shufflePlayerRows);
+    
+        // Existing code...
+    
+        // Initial setup
+        addInitialRows();
+
+        // Initialize Interact.js
+        interact('.draggable')
+        .draggable({
+        listeners: {
+        move(event) {
+        const { target } = event;
+        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+        target.style.transform = `translate(${x}px, ${y}px)`;
+        target.setAttribute('data-x', x);
+        target.setAttribute('data-y', y);
+      }
+    }
+  });
+      
+  document.addEventListener('DOMContentLoaded', function () {
+    // Dropdown toggle functionality
+    const exportButton = document.getElementById('exportButton');
+    const exportDropdown = document.getElementById('exportDropdown');
+    
+    exportButton.addEventListener('click', function () {
+        exportDropdown.classList.toggle('show');
+    });
+
+    // Close dropdown if clicked outside
+    window.addEventListener('click', function (e) {
+        if (!e.target.matches('#exportButton')) {
+            exportDropdown.classList.remove('show');
+        }
+    });
+
+    // Add event listeners for export buttons
+    document.getElementById('exportCSV').addEventListener('click', function () {
+        // Your export to CSV logic here
+    });
+
+    document.getElementById('exportExcel').addEventListener('click', function () {
+        // Your export to Excel logic here
+    });
 });
+
+document.getElementById("exportButton").addEventListener("click", function() {
+    var dropdownMenu = document.getElementById("exportDropdown");
+    dropdownMenu.classList.toggle("show");
+});
+
+// Close the dropdown if the user clicks outside of it
+window.onclick = function(event) {
+    if (!event.target.matches('.dropdown-toggle')) {
+        var dropdowns = document.getElementsByClassName("dropdown-menu");
+        for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
+}
+function handleCellInputChange(event) {
+    const cell = event.target.closest('td');
+    if (cell) {
+        // Remove the untouched class when the content is changed
+        cell.classList.remove('untouched');
+    }
+}
+
+function handleCellBlur(event) {
+    const cell = event.target.closest('td');
+    if (cell) {
+        // Check if the current content matches the original content
+        if (cell.textContent.trim() === cell.getAttribute('data-original')) {
+            cell.classList.add('untouched');
+        }
+    }
+}
+
+});
+

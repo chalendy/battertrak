@@ -22,7 +22,7 @@
                     <th class="inning">7</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="playerTableBody">
                 <!-- Rows for players will go here -->
             </tbody>
             <tfoot>
@@ -48,26 +48,74 @@
                 </tr>
             </tfoot>
         </table>
-        <div id="scoreboard">
-            <div id="runs">
-                <div id="totalRuns">Home: 0</div>
-                <div id="totalOpposingRuns">Away: 0</div>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <div id="navbar">
+            <!-- Logo and Logo Text -->
+            <div id="logo-container">
+                <img src="/icons/BatterTrakLogo.png" alt="Logo" id="logo">
+                <img src="/icons/BatterTrak.png" alt="Logo Text" id="logo-text">
             </div>
-            <div id="inning-info">
-                <div id="currentInning">Inning: 1</div>
-                <div id="currentOuts">Outs: 0</div>
+
+            <!-- Add more buttons as needed -->
+            <div class="central-info">
+                <div class="info-item">
+                    <div>Home</div>
+                    <div id="totalRuns">0</div>
+                </div>
+                <div class="info-item">
+                    <div>Away</div>
+                    <div id="totalOpposingRuns">0</div>
+                </div>
+                <div class="info-item">
+                    <div id="currentInning">Inning: 1</div>
+                </div>
+                <div class="info-item">
+                    <div id="currentOuts">Outs: 0</div>
+                </div>
             </div>
-        </div>
+            
+            <div class="dropdown">
+                <button class="dropdown-toggle" id="playerCountButton">
+                    <span id="currentPlayers">10</span> <i class="fa-solid fa-user-gear"></i>
+                </button>
+                <div class="dropdown-menu" id="playerOptionsDropdown">
+                    <button id="increasePlayers">Increase Players</button>
+                    <button id="decreasePlayers">Decrease Players</button>
+                    <button id="clearData">Clear Inning Data</button>
+                    <button id="shufflePlayers">Shuffle Players</button>
+                </div>
+            </div>  
+
+            <div class="dropdown">
+                <button class="dropdown-toggle" id="exportButton">
+                    Export <i class="fa-solid fa-cloud-arrow-up"></i></button>
+                <div class="dropdown-menu" id="exportDropdown">
+                    <button id="exportCSV">Export to CSV</button>
+                    <button id="exportExcel">Export to Excel</button>
+                </div>
+            </div> 
+        
+        </div>        
         <div id="playerControl">
-            <button id="decreasePlayers">-</button>
-            <span id="currentPlayers">10</span>
-            <button id="increasePlayers">+</button>
-            <button id="exportCSV">Export CSV</button> <!-- CSV Export button -->
-            <button id="exportExcel">Export to Excel</button> <!-- Excel Export button -->
+
         </div>
     </main>
     <script src="scripts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@latest"></script>
+    <!-- Register the Service Worker -->
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then((registration) => {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        }, (error) => {
+                            console.log('ServiceWorker registration failed: ', error);
+                        });
+                });
+            }
+        </script>
+        <script src="app.js"></script>
 </body>
 </html>
