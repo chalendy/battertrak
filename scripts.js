@@ -92,10 +92,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
     
-                totalRuns += runCount;
-                totalOpposingRuns += opposingRunCount;
             });
     
+            totalRuns += runCount;
+            totalOpposingRuns += opposingRunCount;
             totalRunsDisplay.textContent = `${totalRuns}`;
             totalOpposingRunsDisplay.textContent = `${totalOpposingRuns}`;
             currentInningDisplay.textContent = `Inning: ${lastInningWithData}`;
@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const newRow = document.createElement("tr");
     
         newRow.innerHTML = `
-            <td>${rowCount}</td>
+            <td class="unselectable">${rowCount}</td>
             <td contenteditable="true" class="editable-player-name" data-original="Player Name">Player Name</td>
             ${Array.from({ length: 7 }, (_, i) => `
                 <td class="inning untouched" data-original="">
@@ -130,29 +130,23 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
         tableBody.appendChild(newRow);
     
-         // Add event listeners for diamond clicks and label clicks
-         newRow.querySelectorAll(".diamond").forEach(diamond => 
+        newRow.querySelectorAll(".diamond").forEach(diamond => 
             diamond.addEventListener("click", handleDiamondClick)
         );
         newRow.querySelectorAll(".score-options label").forEach(label => 
             label.addEventListener("click", handleLabelClick)
         );
-
-        // Add event listener to handle player name cell editing
         newRow.querySelectorAll(".editable-player-name").forEach(cell => 
             cell.addEventListener("focus", handlePlayerNameFocus)
         );
 
-        // Add drag-and-drop functionality
         newRow.draggable = true;
         newRow.addEventListener('dragstart', () => {
             draggedRow = newRow;
         });
-    
         newRow.addEventListener('dragover', (event) => {
             event.preventDefault();
         });
-    
         newRow.addEventListener('drop', () => {
             if (draggedRow !== newRow) {
                 const rows = Array.from(document.querySelectorAll('tbody tr'));
@@ -166,12 +160,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         });
-    
         newRow.addEventListener('dragend', () => {
             draggedRow = null;
         });
     }
-    
     
 
     function handlePlayerNameFocus(event) {

@@ -342,3 +342,12 @@ tfoot input[type="text"] {
     background-color: #f0f0f0;
     color: white; /* Adjust text color for better contrast if needed */
 }
+
+.unselectable {
+    user-select: none; /* Standard syntax */
+    -webkit-user-select: none; /* Chrome, Safari, and Opera */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    touch-action: none; /* Prevent default touch actions */
+}
+
