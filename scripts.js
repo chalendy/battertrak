@@ -169,87 +169,145 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener("DOMContentLoaded", () => {
             let draggedRow = null;
         
-            // Initialize interact.js for draggable rows
-            interact('.draggable-row')
+            interact('tr.draggable-row')
                 .draggable({
-                    inertia: true,
-                    autoScroll: true,
                     listeners: {
-                        move: dragMoveListener,
-                        end: onDragEnd
-                    }
+                        start(event) {
+                            draggedRow = event.target;
+                            draggedRow.classList.add('dragging');
+                        },
+                        move(event) {
+                            const targetRow = document.elementFromPoint(event.pageX, event.pageY).closest('tr');
+                            if (targetRow && draggedRow !== targetRow) {
+                                const targetRect = targetRow.getBoundingClientRect();
+                                const draggedRect = draggedRow.getBoundingClientRect();
+        
+                                if (event.pageY < targetRect.top + targetRect.height / 2) {
+                                    targetRow.parentNode.insertBefore(draggedRow, targetRow);
+                                } else {
+                                    targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
+                                }
+                            }
+                        },
+                        end(event) {
+                            draggedRow.classList.remove('dragging');
+                            draggedRow = null;
+                        }
+                    },
+                    modifiers: [
+                        interact.modifiers.restrict({
+                            restriction: 'parent',
+                            endOnly: true
+                        })
+                    ],
+                    inertia: true
                 });
         
-            function dragMoveListener(event) {
-                const target = event.target;
-                const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-                const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-        
-                target.style.transform = `translate(${x}px, ${y}px)`;
-                target.setAttribute('data-x', x);
-                target.setAttribute('data-y', y);
-            }
-        
-            function onDragEnd(event) {
-                const target = event.target;
-                const rows = Array.from(document.querySelectorAll('.draggable-row'));
-                let dropRow = null;
-        
-                // Determine where to insert the dragged row
-                rows.forEach(row => {
-                    const rect = row.getBoundingClientRect();
-                    if (event.clientY >= rect.top && event.clientY <= rect.bottom) {
-                        dropRow = row;
-                    }
-                });
-        
-                if (dropRow && dropRow !== target) {
-                    const parent = target.parentNode;
-                    if (event.clientY < dropRow.getBoundingClientRect().top) {
-                        parent.insertBefore(target, dropRow);
-                    } else {
-                        parent.insertBefore(target, dropRow.nextSibling);
-                    }
-                }
-        
-                // Reset the position attributes and remove transformation
-                target.style.transform = '';
-                target.removeAttribute('data-x');
-                target.removeAttribute('data-y');
-            }
-        
-            // Example function to add a new player row (simplified for this context)
             function addPlayerRow(rowCount) {
                 const tableBody = document.querySelector("tbody");
                 const newRow = document.createElement("tr");
-                newRow.className = 'draggable-row';
+            
                 newRow.innerHTML = `
+                    <tr class="draggable-row" draggable="true">
                     <td class="unselectable">${rowCount}</td>
-                    <td contenteditable="true" class="editable-player-name">Player Name</td>
+                    <td contenteditable="true" class="editable-player-name" data-original="Player Name">Player Name</td>
                     ${Array.from({ length: 7 }, (_, i) => `
-                        <td class="inning">
+                        <td class="inning untouched" data-original="">
+                            <div class="score-options">
+                                <div class="top-row">
+                                    <label><input type="checkbox" class="hit-checkbox" data-type="1B"> 1B</label>
+                                    <label><input type="checkbox" class="hit-checkbox" data-type="2B"> 2B</label>
+                                    <label><input type="checkbox" class="hit-checkbox" data-type="3B"> 3B</label>
+                                </div>
+                                <div class="bottom-row">
+                                    <label><input type="checkbox" class="hit-checkbox" data-type="BB"> BB</label>
+                                    <label><input type="checkbox" class="hit-checkbox" data-type="HR"> HR</label>
+                                </div>
+                            </div>
                             <div class="diamond"></div>
                         </td>
+                        </tr>
                     `).join('')}
                 `;
                 tableBody.appendChild(newRow);
+            
+                newRow.querySelectorAll(".diamond").forEach(diamond => 
+                    diamond.addEventListener("click", handleDiamondClick)
+                );
+                newRow.querySelectorAll(".score-options label").forEach(label => 
+                    label.addEventListener("click", handleLabelClick)
+                );
+                newRow.querySelectorAll(".editable-player-name").forEach(cell => 
+                    cell.addEventListener("focus", handlePlayerNameFocus)
+                );
         
-                // Re-initialize interact.js for the new row
-                interact(newRow)
-                    .draggable({
-                        inertia: true,
-                        autoScroll: true,
-                        listeners: {
-                            move: dragMoveListener,
-                            end: onDragEnd
+                interact(newRow).draggable({
+                    listeners: {
+                        start(event) {
+                            draggedRow = event.target;
+                            draggedRow.classList.add('dragging');
+                        },
+                        move(event) {
+                            const targetRow = document.elementFromPoint(event.pageX, event.pageY).closest('tr');
+                            if (targetRow && draggedRow !== targetRow) {
+                                const targetRect = targetRow.getBoundingClientRect();
+                                const draggedRect = draggedRow.getBoundingClientRect();
+        
+                                if (event.pageY < targetRect.top + targetRect.height / 2) {
+                                    targetRow.parentNode.insertBefore(draggedRow, targetRow);
+                                } else {
+                                    targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
+                                }
+                            }
+                        },
+                        end(event) {
+                            draggedRow.classList.remove('dragging');
+                            draggedRow = null;
                         }
-                    });
+                    },
+                    modifiers: [
+                        interact.modifiers.restrict({
+                            restriction: 'parent',
+                            endOnly: true
+                        })
+                    ],
+                    inertia: true
+                });
             }
         
-            // Adding initial rows as an example
-            for (let i = 1; i <= 10; i++) {
-                addPlayerRow(i);
-            }
+            // Add existing rows to event listeners and draggable setup
+            document.querySelectorAll("tbody tr").forEach(row => interact(row).draggable({
+                listeners: {
+                    start(event) {
+                        draggedRow = event.target;
+                        draggedRow.classList.add('dragging');
+                    },
+                    move(event) {
+                        const targetRow = document.elementFromPoint(event.pageX, event.pageY).closest('tr');
+                        if (targetRow && draggedRow !== targetRow) {
+                            const targetRect = targetRow.getBoundingClientRect();
+                            const draggedRect = draggedRow.getBoundingClientRect();
+        
+                            if (event.pageY < targetRect.top + targetRect.height / 2) {
+                                targetRow.parentNode.insertBefore(draggedRow, targetRow);
+                            } else {
+                                targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
+                            }
+                        }
+                    },
+                    end(event) {
+                        draggedRow.classList.remove('dragging');
+                        draggedRow = null;
+                    }
+                },
+                modifiers: [
+                    interact.modifiers.restrict({
+                        restriction: 'parent',
+                        endOnly: true
+                    })
+                ],
+                inertia: true
+            }));
         });
         
     }
