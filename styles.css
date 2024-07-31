@@ -351,3 +351,6 @@ tfoot input[type="text"] {
     touch-action: none; /* Prevent default touch actions */
 }
 
+.draggable {
+    cursor: move;
+}

@@ -109,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const newRow = document.createElement("tr");
     
         newRow.innerHTML = `
+            <tr class="draggable-row" draggable="true">
             <td class="unselectable">${rowCount}</td>
             <td contenteditable="true" class="editable-player-name" data-original="Player Name">Player Name</td>
             ${Array.from({ length: 7 }, (_, i) => `
@@ -126,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                     <div class="diamond"></div>
                 </td>
+                </tr>
             `).join('')}
         `;
         tableBody.appendChild(newRow);
@@ -163,9 +165,96 @@ document.addEventListener("DOMContentLoaded", () => {
         newRow.addEventListener('dragend', () => {
             draggedRow = null;
         });
-    }
-    
 
+        document.addEventListener("DOMContentLoaded", () => {
+            let draggedRow = null;
+        
+            // Initialize interact.js for draggable rows
+            interact('.draggable-row')
+                .draggable({
+                    inertia: true,
+                    autoScroll: true,
+                    listeners: {
+                        move: dragMoveListener,
+                        end: onDragEnd
+                    }
+                });
+        
+            function dragMoveListener(event) {
+                const target = event.target;
+                const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+        
+                target.style.transform = `translate(${x}px, ${y}px)`;
+                target.setAttribute('data-x', x);
+                target.setAttribute('data-y', y);
+            }
+        
+            function onDragEnd(event) {
+                const target = event.target;
+                const rows = Array.from(document.querySelectorAll('.draggable-row'));
+                let dropRow = null;
+        
+                // Determine where to insert the dragged row
+                rows.forEach(row => {
+                    const rect = row.getBoundingClientRect();
+                    if (event.clientY >= rect.top && event.clientY <= rect.bottom) {
+                        dropRow = row;
+                    }
+                });
+        
+                if (dropRow && dropRow !== target) {
+                    const parent = target.parentNode;
+                    if (event.clientY < dropRow.getBoundingClientRect().top) {
+                        parent.insertBefore(target, dropRow);
+                    } else {
+                        parent.insertBefore(target, dropRow.nextSibling);
+                    }
+                }
+        
+                // Reset the position attributes and remove transformation
+                target.style.transform = '';
+                target.removeAttribute('data-x');
+                target.removeAttribute('data-y');
+            }
+        
+            // Example function to add a new player row (simplified for this context)
+            function addPlayerRow(rowCount) {
+                const tableBody = document.querySelector("tbody");
+                const newRow = document.createElement("tr");
+                newRow.className = 'draggable-row';
+                newRow.innerHTML = `
+                    <td class="unselectable">${rowCount}</td>
+                    <td contenteditable="true" class="editable-player-name">Player Name</td>
+                    ${Array.from({ length: 7 }, (_, i) => `
+                        <td class="inning">
+                            <div class="diamond"></div>
+                        </td>
+                    `).join('')}
+                `;
+                tableBody.appendChild(newRow);
+        
+                // Re-initialize interact.js for the new row
+                interact(newRow)
+                    .draggable({
+                        inertia: true,
+                        autoScroll: true,
+                        listeners: {
+                            move: dragMoveListener,
+                            end: onDragEnd
+                        }
+                    });
+            }
+        
+            // Adding initial rows as an example
+            for (let i = 1; i <= 10; i++) {
+                addPlayerRow(i);
+            }
+        });
+        
+    }
+            
+    
     function handlePlayerNameFocus(event) {
         const cell = event.target;
         if (cell.innerText === "Player Name") {
