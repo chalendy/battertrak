@@ -11,8 +11,8 @@
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Player</th>
+                    <th class="sticky-col">#</th>
+                    <th class="sticky-col">Player</th>
                     <th class="inning">1</th>
                     <th class="inning">2</th>
                     <th class="inning">3</th>
@@ -38,13 +38,55 @@
                 </tr>
                 <tr>
                     <td colspan="2">Opposing Runs</td>
-                    <td class="inning"><input type="text" id="opposing-runs-inning-1" value="0"></td>
-                    <td class="inning"><input type="text" id="opposing-runs-inning-2" value="0"></td>
-                    <td class="inning"><input type="text" id="opposing-runs-inning-3" value="0"></td>
-                    <td class="inning"><input type="text" id="opposing-runs-inning-4" value="0"></td>
-                    <td class="inning"><input type="text" id="opposing-runs-inning-5" value="0"></td>
-                    <td class="inning"><input type="text" id="opposing-runs-inning-6" value="0"></td>
-                    <td class="inning"><input type="text" id="opposing-runs-inning-7" value="0"></td>
+                    <td class="inning">
+                        <div class="spinner">
+                            <button onclick="decrement('opposing-runs-inning-1')">-</button>
+                            <input type="text" id="opposing-runs-inning-1" value="0">
+                            <button onclick="increment('opposing-runs-inning-1')">+</button>
+                        </div>
+                    </td>
+                    <td class="inning">
+                        <div class="spinner">
+                            <button onclick="decrement('opposing-runs-inning-2')">-</button>
+                            <input type="text" id="opposing-runs-inning-2" value="0">
+                            <button onclick="increment('opposing-runs-inning-2')">+</button>
+                        </div>
+                    </td>
+                    <td class="inning">
+                        <div class="spinner">
+                            <button onclick="decrement('opposing-runs-inning-3')">-</button>
+                            <input type="text" id="opposing-runs-inning-3" value="0">
+                            <button onclick="increment('opposing-runs-inning-3')">+</button>
+                        </div>
+                    </td>
+                    <td class="inning">
+                        <div class="spinner">
+                            <button onclick="decrement('opposing-runs-inning-4')">-</button>
+                            <input type="text" id="opposing-runs-inning-4" value="0">
+                            <button onclick="increment('opposing-runs-inning-4')">+</button>
+                        </div>
+                    </td>
+                    <td class="inning">
+                        <div class="spinner">
+                            <button onclick="decrement('opposing-runs-inning-5')">-</button>
+                            <input type="text" id="opposing-runs-inning-5" value="0">
+                            <button onclick="increment('opposing-runs-inning-5')">+</button>
+                        </div>
+                    </td>
+                    <td class="inning">
+                        <div class="spinner">
+                            <button onclick="decrement('opposing-runs-inning-6')">-</button>
+                            <input type="text" id="opposing-runs-inning-6" value="0">
+                            <button onclick="increment('opposing-runs-inning-6')">+</button>
+                        </div>
+                    </td>
+                    <td class="inning">
+                        <div class="spinner">
+                            <button onclick="decrement('opposing-runs-inning-7')">-</button>
+                            <input type="text" id="opposing-runs-inning-7" value="0">
+                            <button onclick="increment('opposing-runs-inning-7')">+</button>
+                        </div>
+                    </td>
                 </tr>
             </tfoot>
         </table>
@@ -104,18 +146,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs@latest"></script>
     <!-- Register the Service Worker -->
-        <script>
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/service-worker.js')
-                        .then((registration) => {
-                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                        }, (error) => {
-                            console.log('ServiceWorker registration failed: ', error);
-                        });
-                });
-            }
-        </script>
-        <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    }, (error) => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>

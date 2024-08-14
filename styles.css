@@ -25,6 +25,7 @@ table {
     
 }
 
+
 th, td {
     border: 1px solid #ddd;
     padding: 8px;
@@ -154,7 +155,24 @@ input[type="number"] {
     padding: 2px 4px;
     cursor: pointer;
     white-space: nowrap;
+    
+/* Transition code starts */
+    box-sizing: border-box;
+    transition: background-color 0.1s, transform 0.1; /* Smooth transitions */
 }
+
+/* Score options label hover effect */
+.score-options label:hover {
+    background-color: #e0e0e0; /* Light grey background */
+    transform: scale(1.05); /* Slight zoom effect */
+}
+
+/* Optional: Add a box shadow for visual emphasis */
+.score-options label:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+}
+/* Transition code ends */
+
 
 .score-options input[type="checkbox"] {
     display: none;
@@ -186,6 +204,7 @@ input[type="number"] {
     border-radius: 50%;
     padding: 2px 5px;
 }
+
 
 /* Floating Inning Info Styling */
 
@@ -353,4 +372,60 @@ tfoot input[type="text"] {
 
 .draggable {
     cursor: move;
+
 }
+        /* Custom spinner styling */
+        .spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner input {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            height: 30px;
+            margin: 0 5px;
+        }
+
+        .spinner button {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 0 10px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        .spinner button:active {
+            background-color: #ddd;
+        }
+
+
+        tfoot {
+            position: sticky;
+            bottom: 0;
+            background-color: #f4f4f4; /* Ensure the background matches your design */
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1); /* Optional: add shadow for better visibility */
+            z-index: 10; /* Ensure it stays above other content */
+        }
+        
+        /* Center text in input fields */
+        .inning input[type="number"] {
+        text-align: center; /* Horizontally center text */
+        vertical-align: middle; /* Vertically center text */
+    }
+
+    /* Optional: Adjust input field styles if needed */
+        .inning input[type="number"] {
+        width: 45px; /* Adjust width if needed */
+        padding: 2.5px; /* Add padding for better spacing */
+    }
+
+        .inning input[type="number"]::-webkit-inner-spin-button,
+        .inning input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }   
