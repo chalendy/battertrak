@@ -1,19 +1,101 @@
+let totalRunsDisplay;
+let totalOpposingRunsDisplay;
+let currentInningDisplay;
+let currentOutsDisplay;
+
 document.addEventListener("DOMContentLoaded", () => {
     const increasePlayersButton = document.getElementById('increasePlayers');
     const decreasePlayersButton = document.getElementById('decreasePlayers');
     const currentPlayersDisplay = document.getElementById("currentPlayers");
-    const totalRunsDisplay = document.getElementById("totalRuns");
-    const totalOpposingRunsDisplay = document.getElementById("totalOpposingRuns");
-    const currentInningDisplay = document.getElementById("currentInning");
-    const currentOutsDisplay = document.getElementById("currentOuts");
+    totalRunsDisplay = document.getElementById("totalRuns");
+    totalOpposingRunsDisplay = document.getElementById("totalOpposingRuns");
+    currentInningDisplay = document.getElementById("currentInning");
+    currentOutsDisplay = document.getElementById("currentOuts");
     const inningsInputs = document.querySelectorAll("tfoot input[type='number']");
     const opposingInningsInputs = document.querySelectorAll("tfoot input[type='text']");
+    const shufflePlayersButton = document.getElementById('shufflePlayers'); // Add this line
 
+    
+    
     const MAX_PLAYERS = 20;
     const MIN_PLAYERS = 10;
     let currentPlayers = MIN_PLAYERS;
-    let draggedRow = null;  // Store reference to the dragged row
+    let draggedRow = null;
+    let placeholder = null; 
 
+// Function to update run count and inning information
+    function updateRunCount() {
+    const rows = document.querySelectorAll("tbody tr");
+    let totalRuns = 0;
+    let totalOpposingRuns = 0;
+    let lastInningWithData = 1;
+    let outsInCurrentInning = 0;
+
+    for (let inning = 1; inning <= 7; inning++) {
+        let runCount = 0;
+        let opposingRunCount = 0;
+        let inningHasData = false;
+        let inningOuts = 0;
+
+        rows.forEach(row => {
+            const inningCell = row.querySelector(`.inning:nth-child(${inning + 2})`);
+            const diamond = inningCell.querySelector(".diamond");
+            const scoreOptions = inningCell.querySelector(".score-options");
+
+            // Determine if the cell should be greyed out
+            let diamondClass = diamond ? diamond.classList : [];
+            let hasScoreOptionsChecked = scoreOptions && scoreOptions.querySelector("input[type='checkbox']:checked");
+            
+            if (!diamondClass.contains("run-scored") && !diamondClass.contains("out") && !hasScoreOptionsChecked) {
+                inningCell.style.backgroundColor = '#f0f0f0';
+            } else {
+                inningCell.style.backgroundColor = '';
+            }
+
+            if (diamondClass.contains("run-scored")) {
+                runCount++;
+                inningHasData = true;
+            }
+            if (diamondClass.contains("out")) {
+                inningHasData = true;
+                inningOuts++;
+            }
+            if (hasScoreOptionsChecked) {
+                inningHasData = true;
+            }
+
+            // Update run and opposing run counts
+            const runInput = document.getElementById(`runs-inning-${inning}`);
+            runInput.value = runCount;
+
+            const opposingRunInput = document.getElementById(`opposing-runs-inning-${inning}`);
+            if (opposingRunInput.value.trim() !== "") {
+                opposingRunCount = parseInt(opposingRunInput.value) || 0;
+                if (opposingRunCount > 0 || runCount > 0) {
+                    inningHasData = true;
+                }
+            }
+
+            if (inningHasData) {
+                lastInningWithData = inning;
+                if (inning === lastInningWithData) {
+                    outsInCurrentInning = inningOuts;
+                }
+            }
+        });
+
+        totalRuns += runCount;
+        totalOpposingRuns += opposingRunCount;
+    }
+
+    // Update scoreboard displays
+    totalRunsDisplay.textContent = `${totalRuns}`;
+    totalOpposingRunsDisplay.textContent = `${totalOpposingRuns}`;
+    currentInningDisplay.textContent = `Inning: ${lastInningWithData}`;
+    currentOutsDisplay.textContent = `Outs: ${outsInCurrentInning}`;
+}
+
+    // Function to handle diamond state changes
     function toggleDiamond(diamond) {
         if (diamond.classList.contains("run-scored")) {
             diamond.classList.remove("run-scored");
@@ -29,90 +111,17 @@ document.addEventListener("DOMContentLoaded", () => {
         updateRunCount();
     }
 
-    function updateRunCount() {
-        const rows = document.querySelectorAll("tbody tr");
-    
-        let totalRuns = 0;
-        let totalOpposingRuns = 0;
-        let lastInningWithData = 1; // Default to inning 1
-        let outsInCurrentInning = 0;
-    
-        for (let inning = 1; inning <= 7; inning++) {
-            let runCount = 0;
-            let opposingRunCount = 0;
-            let inningHasData = false;
-            let inningOuts = 0;
-    
-            rows.forEach(row => {
-                const inningCell = row.querySelector(`.inning:nth-child(${inning + 2})`);
-                const diamond = inningCell.querySelector(".diamond");
-                const scoreOptions = inningCell.querySelector(".score-options");
-    
-                // Check diamond state and score options
-                let diamondClass = diamond ? diamond.classList : [];
-                let hasScoreOptionsChecked = scoreOptions && scoreOptions.querySelector("input[type='checkbox']:checked");
-    
-                // Determine if the cell should be grey
-                if (!diamondClass.contains("run-scored") && !diamondClass.contains("out") && !hasScoreOptionsChecked) {
-                    inningCell.style.backgroundColor = '#f0f0f0';
-                } else {
-                    inningCell.style.backgroundColor = ''; // Reset to default
-                }
-    
-                // Count runs and outs
-                if (diamondClass.contains("run-scored")) {
-                    runCount++;
-                    inningHasData = true;
-                }
-                if (diamondClass.contains("out")) {
-                    inningHasData = true;
-                    inningOuts++;
-                }
-                
-                // Check if any checkbox is checked in the current inning
-                if (hasScoreOptionsChecked) {
-                    inningHasData = true;
-                }
-    
-                const runInput = document.getElementById(`runs-inning-${inning}`);
-                runInput.value = runCount;
-    
-                const opposingRunInput = document.getElementById(`opposing-runs-inning-${inning}`);
-                if (opposingRunInput.value.trim() !== "") {
-                    opposingRunCount = parseInt(opposingRunInput.value) || 0;
-                    if (opposingRunCount > 0 || runCount > 0) {
-                        inningHasData = true;
-                    }
-                }
-    
-                if (inningHasData) {
-                    lastInningWithData = inning;
-                    if (inning === lastInningWithData) {
-                        outsInCurrentInning = inningOuts;
-                    }
-                }
-    
-            });
-    
-            totalRuns += runCount;
-            totalOpposingRuns += opposingRunCount;
-            totalRunsDisplay.textContent = `${totalRuns}`;
-            totalOpposingRunsDisplay.textContent = `${totalOpposingRuns}`;
-            currentInningDisplay.textContent = `Inning: ${lastInningWithData}`;
-            currentOutsDisplay.textContent = `Outs: ${outsInCurrentInning}`;
-        }
-    }
-    
-
+    // Function to add a new player row
     function addPlayerRow(rowCount) {
         const tableBody = document.querySelector("tbody");
         const newRow = document.createElement("tr");
-    
+        
         newRow.innerHTML = `
-            <tr class="draggable-row" draggable="true">
-            <td class="unselectable">${rowCount}</td>
+            <td class="unselectable drag-handle" draggable="true">
+                <i class="fa-solid fa-bars"></i> ${rowCount}
+            </td>
             <td contenteditable="true" class="editable-player-name" data-original="Player Name">Player Name</td>
-            ${Array.from({ length: 7 }, (_, i) => `
+            ${Array.from({ length: 7 }, () => `
                 <td class="inning untouched" data-original="">
                     <div class="score-options">
                         <div class="top-row">
@@ -127,11 +136,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                     <div class="diamond"></div>
                 </td>
-                </tr>
             `).join('')}
+            <td class="delete-row">
+            <i class="fa-solid fa-trash"></i>
+            </td>
         `;
         tableBody.appendChild(newRow);
+
     
+
+        // Attach event listeners to new rows
         newRow.querySelectorAll(".diamond").forEach(diamond => 
             diamond.addEventListener("click", handleDiamondClick)
         );
@@ -141,231 +155,169 @@ document.addEventListener("DOMContentLoaded", () => {
         newRow.querySelectorAll(".editable-player-name").forEach(cell => 
             cell.addEventListener("focus", handlePlayerNameFocus)
         );
+        
+        // Attach delete row event listener
+        const deleteButton = newRow.querySelector(".delete-row i");
+        deleteButton.addEventListener("click", () => {
+            deletePlayerRow(newRow);
+        });
 
-        newRow.draggable = true;
-        newRow.addEventListener('dragstart', () => {
-            draggedRow = newRow;
-        });
-        newRow.addEventListener('dragover', (event) => {
-            event.preventDefault();
-        });
-        newRow.addEventListener('drop', () => {
-            if (draggedRow !== newRow) {
-                const rows = Array.from(document.querySelectorAll('tbody tr'));
-                const draggedIndex = rows.indexOf(draggedRow);
-                const targetIndex = rows.indexOf(newRow);
+// Drag-and-drop and touch functionality
+
+// Function to create a placeholder row
+function createPlaceholder() {
+    placeholder = document.createElement('tr');
+    placeholder.className = 'placeholder'; // Optional: Style the placeholder via CSS
+}
+
+// Function to handle drag start
+function handleDragStart(event) {
+    draggedRow = event.currentTarget;
+    draggedRow.classList.add('dragging');
+    createPlaceholder();
+    event.dataTransfer?.setData('text/plain', ''); // Necessary for Firefox compatibility
+}
+
+// Function to handle drag over
+function handleDragOver(event) {
+    event.preventDefault(); // Necessary for drop to work
+    const target = event.target.closest('tr');
+    if (target && target !== draggedRow) {
+        if (event.clientY < target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2) {
+            target.parentNode.insertBefore(placeholder, target);
+        } else {
+            target.parentNode.insertBefore(placeholder, target.nextSibling);
+        }
+    }
+}
+
+// Function to handle drop
+function handleDrop(event) {
+    event.preventDefault();
     
-                if (draggedIndex > targetIndex) {
-                    newRow.before(draggedRow);
-                } else {
-                    newRow.after(draggedRow);
-                }
+    if (!placeholder || !draggedRow) return; // Check if placeholder or draggedRow is null
+    
+    if (draggedRow !== placeholder) {
+        if (placeholder.parentNode) {
+            placeholder.parentNode.insertBefore(draggedRow, placeholder);
+        }
+    }
+    placeholder.remove();
+    draggedRow.classList.remove('dragging');
+    draggedRow = null;
+}
+
+// Function to handle drag end
+function handleDragEnd() {
+    if (placeholder) placeholder.remove();
+    draggedRow?.classList.remove('dragging');
+    draggedRow = null;
+}
+
+// Function to handle touch start
+function handleTouchStart(event) {
+    const target = event.target;
+    // Check if the touch started on the drag handle
+    if (target.classList.contains('drag-handle')) {
+        draggedRow = target.closest('tr');
+        draggedRow.classList.add('dragging');
+        createPlaceholder();
+    } else {
+        // Prevent drag if touch didn't start on the handle
+        draggedRow = null;
+    }
+}
+
+
+function handleTouchMove(event) {
+    if (!draggedRow) return; 
+
+    event.preventDefault();
+    const touch = event.touches[0];
+    const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('tr');
+    
+    if (target && target !== draggedRow && target.closest('tbody')) { // Ensure the target is within tbody
+        if (touch.clientY < target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2) {
+            target.parentNode.insertBefore(placeholder, target);
+        } else {
+            target.parentNode.insertBefore(placeholder, target.nextSibling);
+        }
+    }
+}
+
+function handleTouchEnd(event) {
+    if (draggedRow && placeholder) {
+        const touch = event.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('tr');
+        
+        if (target && target !== draggedRow && target.closest('tbody')) { // Ensure the target is within tbody
+            if (placeholder.parentNode) {
+                placeholder.parentNode.insertBefore(draggedRow, placeholder);
             }
-        });
-        newRow.addEventListener('dragend', () => {
-            draggedRow = null;
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
-            let draggedRow = null;
-        
-            interact('tr.draggable-row')
-                .draggable({
-                    listeners: {
-                        start(event) {
-                            draggedRow = event.target;
-                            draggedRow.classList.add('dragging');
-                        },
-                        move(event) {
-                            const targetRow = document.elementFromPoint(event.pageX, event.pageY).closest('tr');
-                            if (targetRow && draggedRow !== targetRow) {
-                                const targetRect = targetRow.getBoundingClientRect();
-                                const draggedRect = draggedRow.getBoundingClientRect();
-        
-                                if (event.pageY < targetRect.top + targetRect.height / 2) {
-                                    targetRow.parentNode.insertBefore(draggedRow, targetRow);
-                                } else {
-                                    targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
-                                }
-                            }
-                        },
-                        end(event) {
-                            draggedRow.classList.remove('dragging');
-                            draggedRow = null;
-                        }
-                    },
-                    modifiers: [
-                        interact.modifiers.restrict({
-                            restriction: 'parent',
-                            endOnly: true
-                        })
-                    ],
-                    inertia: true
-                });
-        
-            function addPlayerRow(rowCount) {
-                const tableBody = document.querySelector("tbody");
-                const newRow = document.createElement("tr");
-            
-document.addEventListener('DOMContentLoaded', () => {
-    const table = document.querySelector('table');
-    const tfoot = table.querySelector('tfoot');
-    
-    // Create the table rows dynamically
-    const tableBody = document.querySelector('#playerTableBody');
-    // Example row generation
-    for (let i = 1; i <= 10; i++) {
-        const newRow = document.createElement('tr');
-        newRow.className = 'draggable-row';
-        newRow.draggable = true;
-        newRow.innerHTML = `
-            <td class="unselectable">${i}</td>
-            <td contenteditable="true" class="editable-player-name" data-original="Player Name">Player Name</td>
-            ${Array.from({ length: 7 }, (_, j) => `
-                <td class="inning untouched" data-original="">
-                    <div class="score-options">
-                        <div class="top-row">
-                            <label><input type="checkbox" class="hit-checkbox" data-type="1B"> 1B</label>
-                            <label><input type="checkbox" class="hit-checkbox" data-type="2B"> 2B</label>
-                            <label><input type="checkbox" class="hit-checkbox" data-type="3B"> 3B</label>
-                        </div>
-                        <div class="bottom-row">
-                            <label><input type="checkbox" class="hit-checkbox" data-type="BB"> BB</label>
-                            <label><input type="checkbox" class="hit-checkbox" data-type="HR"> HR</label>
-                        </div>
-                    </div>
-                    <div class="diamond"></div>
-                </td>
-            `).join('')}
-        `;
-        tableBody.appendChild(newRow);
+        }
+        placeholder.remove();
+        draggedRow.classList.remove('dragging');
+        draggedRow = null;
     }
+    placeholder = null;
+}
 
-    // Move tfoot to the top of the table
-    if (tfoot) {
-        table.insertBefore(tfoot, table.querySelector('thead'));
-    }
+
+
+// Event listeners for drag-and-drop
+document.querySelectorAll("tbody tr").forEach(row => {
+    row.addEventListener('dragstart', handleDragStart);
+    row.addEventListener('dragover', handleDragOver);
+    row.addEventListener('drop', handleDrop);
+    row.addEventListener('dragend', handleDragEnd);
+    row.addEventListener('touchstart', handleTouchStart);
+    row.addEventListener('touchmove', handleTouchMove);
+    row.addEventListener('touchend', handleTouchEnd);
 });
-
-            
-                newRow.querySelectorAll(".diamond").forEach(diamond => 
-                    diamond.addEventListener("click", handleDiamondClick)
-                );
-                newRow.querySelectorAll(".score-options label").forEach(label => 
-                    label.addEventListener("click", handleLabelClick)
-                );
-                newRow.querySelectorAll(".editable-player-name").forEach(cell => 
-                    cell.addEventListener("focus", handlePlayerNameFocus)
-                );
-        
-                interact(newRow).draggable({
-                    listeners: {
-                        start(event) {
-                            draggedRow = event.target;
-                            draggedRow.classList.add('dragging');
-                        },
-                        move(event) {
-                            const targetRow = document.elementFromPoint(event.pageX, event.pageY).closest('tr');
-                            if (targetRow && draggedRow !== targetRow) {
-                                const targetRect = targetRow.getBoundingClientRect();
-                                const draggedRect = draggedRow.getBoundingClientRect();
-        
-                                if (event.pageY < targetRect.top + targetRect.height / 2) {
-                                    targetRow.parentNode.insertBefore(draggedRow, targetRow);
-                                } else {
-                                    targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
-                                }
-                            }
-                        },
-                        end(event) {
-                            draggedRow.classList.remove('dragging');
-                            draggedRow = null;
-                        }
-                    },
-                    modifiers: [
-                        interact.modifiers.restrict({
-                            restriction: 'parent',
-                            endOnly: true
-                        })
-                    ],
-                    inertia: true
-                });
-            }
-        
-            // Add existing rows to event listeners and draggable setup
-            document.querySelectorAll("tbody tr").forEach(row => interact(row).draggable({
-                listeners: {
-                    start(event) {
-                        draggedRow = event.target;
-                        draggedRow.classList.add('dragging');
-                    },
-                    move(event) {
-                        const targetRow = document.elementFromPoint(event.pageX, event.pageY).closest('tr');
-                        if (targetRow && draggedRow !== targetRow) {
-                            const targetRect = targetRow.getBoundingClientRect();
-                            const draggedRect = draggedRow.getBoundingClientRect();
-        
-                            if (event.pageY < targetRect.top + targetRect.height / 2) {
-                                targetRow.parentNode.insertBefore(draggedRow, targetRow);
-                            } else {
-                                targetRow.parentNode.insertBefore(draggedRow, targetRow.nextSibling);
-                            }
-                        }
-                    },
-                    end(event) {
-                        draggedRow.classList.remove('dragging');
-                        draggedRow = null;
-                    }
-                },
-                modifiers: [
-                    interact.modifiers.restrict({
-                        restriction: 'parent',
-                        endOnly: true
-                    })
-                ],
-                inertia: true
-            }));
-        });
-        
+}
+  
+        // Function to delete a player row
+        function deletePlayerRow(row) {
+        const tableBody = document.querySelector("tbody");
+        tableBody.removeChild(row);
+        currentPlayers--;
+        updatePlayersDisplay();
     }
-            
-    
+
+    // Handle player name focus to clear default text
     function handlePlayerNameFocus(event) {
         const cell = event.target;
         if (cell.innerText === "Player Name") {
-            cell.innerText = ""; // Clear the cell
+            cell.innerText = "";
         }
     }
 
+    // Handle score label clicks
     function handleLabelClick(event) {
         const label = event.currentTarget;
         const checkbox = label.querySelector("input[type='checkbox']");
         const parentRow = label.closest('tr');
         const inningIndex = Array.from(parentRow.querySelectorAll('.inning')).indexOf(label.closest('.inning')) + 1;
-    
-        // Find all labels in the same inning and row
+
         const labelsInInning = parentRow.querySelectorAll(`.inning:nth-child(${inningIndex + 2}) .score-options label`);
-    
+
         if (checkbox.checked) {
-            // If the checkbox is already checked, uncheck it
             checkbox.checked = false;
             label.classList.remove("checked");
         } else {
-            // Uncheck all labels in the same inning
             labelsInInning.forEach(lbl => {
                 lbl.querySelector("input[type='checkbox']").checked = false;
                 lbl.classList.remove("checked");
             });
-    
-            // Check the clicked label
+
             checkbox.checked = true;
             label.classList.add("checked");
         }
-    
-        // Update run count to reflect new state
+
         updateRunCount();
     }
 
+    // Handle diamond clicks
     function handleDiamondClick(event) {
         const diamond = event.target.closest('.diamond');
         if (diamond) {
@@ -373,14 +325,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Add initial rows based on the current player count
     function addInitialRows() {
-        const tableBody = document.querySelector("tbody");
-        tableBody.innerHTML = ''; // Clear existing rows
-        for (let i = 1; i <= currentPlayers; i++) {
+        const numberOfRows = 10; // Example number
+        for (let i = 1; i <= numberOfRows; i++) {
             addPlayerRow(i);
         }
-        
-        // Initialize opposing runs inputs with 0
+
         opposingInningsInputs.forEach(input => {
             input.value = "0";
         });
@@ -388,6 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateRunCount();
     }
 
+    // Update player display and manage row additions/removals
     function updatePlayersDisplay() {
         currentPlayersDisplay.textContent = currentPlayers;
         const tableBody = document.querySelector("tbody");
@@ -395,29 +347,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const numRows = rows.length;
 
         if (numRows < currentPlayers) {
-            // Add new rows if needed
             for (let i = numRows + 1; i <= currentPlayers; i++) {
                 addPlayerRow(i);
             }
         } else if (numRows > currentPlayers) {
-            // Remove extra rows if needed
             for (let i = numRows; i > currentPlayers; i--) {
                 tableBody.removeChild(tableBody.lastChild);
             }
         }
 
-        // Enable or disable buttons
         increasePlayersButton.disabled = currentPlayers >= MAX_PLAYERS;
         decreasePlayersButton.disabled = currentPlayers <= MIN_PLAYERS;
 
         updateRunCount();
     }
-       
+
+    // Function to shuffle player rows
+    function shufflePlayers() {
+        const tableBody = document.querySelector("tbody");
+        const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+        // Fisher-Yates shuffle algorithm
+        for (let i = rows.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            tableBody.appendChild(rows[j]);
+        }
+    }
+
+    // Add event listeners for buttons and inputs
     increasePlayersButton.addEventListener("click", () => {
         if (currentPlayers < MAX_PLAYERS) {
             currentPlayers++;
             updatePlayersDisplay();
-            
         }
     });
 
@@ -428,6 +389,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    shufflePlayersButton.addEventListener("click", shufflePlayers); // Add this line
+
     inningsInputs.forEach(input => {
         input.addEventListener("input", updateRunCount);
     });
@@ -436,328 +399,61 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener("input", updateRunCount);
     });
 
-    document.getElementById("exportCSV").addEventListener("click", () => {
-        exportTableToCSV("scorecard.csv");
-    });
-
-    document.getElementById("exportExcel").addEventListener("click", () => {
-        exportTableToExcel("scorecard.xlsx");
-    });
-
+    // Initial setup
     addInitialRows();
-
-    function exportTableToCSV(filename) {
-        const table = document.querySelector("table");
-        const rows = table.querySelectorAll("tr");
-        let csvContent = "";
-    
-        rows.forEach((row, rowIndex) => {
-            const cells = row.querySelectorAll("td, th");
-            let rowContent = Array.from(cells).map((cell) => {
-                let textContent = cell.innerText.trim();
-    
-                // Extract checkboxes if they exist
-                let checkboxes = cell.querySelectorAll('input[type="checkbox"]');
-                if (checkboxes.length > 0) {
-                    let checkedValues = Array.from(checkboxes)
-                        .filter(checkbox => checkbox.checked)
-                        .map(checkbox => checkbox.dataset.type || "Checked")
-                        .join(", "); // Combine all checked values
-    
-                    // Only include checked values if any are selected
-                    if (checkedValues.length > 0) {
-                        textContent = checkedValues;
-                    } else {
-                        // If no checkboxes are checked, ensure no default values are included
-                        textContent = "";
-                    }
-                }
-    
-                // Check for diamonds and add their state
-                let diamond = cell.querySelector('.diamond');
-                if (diamond) {
-                    if (diamond.classList.contains("run-scored")) {
-                        textContent += textContent ? " | RUN" : "RUN";
-                    } else if (diamond.classList.contains("out")) {
-                        textContent += textContent ? " | OUT" : "OUT";
-                    }
-                }
-    
-                return textContent || ""; // Return the combined text content or empty if no relevant data
-            }).join(",");
-    
-            // Handle the "Runs" and "Opposing Runs" rows
-            if (rowIndex === rows.length - 2) { // "Runs" row
-                rowContent = "Runs," + Array.from(row.querySelectorAll("input[type='number']")).map(input => input.value.trim()).join(",");
-            } else if (rowIndex === rows.length - 1) { // "Opposing Runs" row
-                rowContent = "Opposing Runs," + Array.from(row.querySelectorAll("input[type='text']")).map(input => input.value.trim()).join(",");
-            }
-    
-            // Add the row header
-            if (rowIndex < rows.length - 2) {
-                rowContent = row.querySelector("th") ? row.querySelector("th").innerText.trim() + "," + rowContent : rowContent;
-            }
-    
-            csvContent += rowContent + "\n";
-        });
-    
-        // Create a Blob and trigger download
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        if (link.download !== undefined) { // Feature detection
-            const url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", filename);
-            link.style.visibility = "hidden";
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    }
-    
-    
-    
-    
-    function exportTableToExcel(filename) {
-        // Create a new workbook and worksheet
-        const workbook = XLSX.utils.book_new();
-        const table = document.querySelector("table");
-        const rows = table.querySelectorAll("tr");
-    
-        // Extract the table data into an array
-        let data = Array.from(rows).map((row, rowIndex) => {
-            return Array.from(row.querySelectorAll("td, th")).map(cell => {
-                let textContent = cell.innerText.trim();
-    
-                // Extract checkboxes if they exist
-                let checkboxes = cell.querySelectorAll('input[type="checkbox"]');
-                if (checkboxes.length > 0) {
-                    let checkedValues = Array.from(checkboxes)
-                        .filter(checkbox => checkbox.checked)
-                        .map(checkbox => checkbox.dataset.type || "Checked")
-                        .join(", "); // Combine all checked values
-    
-                    // Only include checked values if any are selected
-                    if (checkedValues.length > 0) {
-                        textContent = checkedValues;
-                    } else {
-                        // If no checkboxes are checked, ensure no default values are included
-                        textContent = "";
-                    }
-                }
-    
-                // Check for diamonds and add their state
-                let diamond = cell.querySelector('.diamond');
-                if (diamond) {
-                    if (diamond.classList.contains("run-scored")) {
-                        textContent += textContent ? " | RUN" : "RUN";
-                    } else if (diamond.classList.contains("out")) {
-                        textContent += textContent ? " | OUT" : "OUT";
-                    }
-                }
-    
-                return textContent || ""; // Return the combined text content or empty if no relevant data
-            });
-        });
-    
-        // Add headers for Runs and Opposing Runs if they do not exist
-        let runsRow = data[data.length - 2] || [];
-        let opposingRunsRow = data[data.length - 1] || [];
-        
-        // Ensure "Runs" and "Opposing Runs" row headings are present
-        if (!runsRow.length) {
-            runsRow = Array(data[0].length).fill("");
-        }
-        if (!opposingRunsRow.length) {
-            opposingRunsRow = Array(data[0].length).fill("");
-        }
-    
-        // Set the row headings for Runs and Opposing Runs
-        runsRow[0] = "Runs";
-        opposingRunsRow[0] = "Opposing Runs";
-    
-        // Populate values for Runs and Opposing Runs
-        for (let i = 1; i < runsRow.length; i++) {
-            let input = document.querySelector(`#runs-inning-${i}`);
-            runsRow[i] = input ? input.value.trim() : "";
-        }
-    
-        for (let i = 1; i < opposingRunsRow.length; i++) {
-            let input = document.querySelector(`#opposing-runs-inning-${i}`);
-            opposingRunsRow[i] = input ? input.value.trim() : "";
-        }
-    
-        // Ensure the last two rows are updated in the data array
-        data[data.length - 2] = runsRow;
-        data[data.length - 1] = opposingRunsRow;
-    
-        // Convert the array to a worksheet
-        const worksheet = XLSX.utils.aoa_to_sheet(data);
-    
-        // Append the worksheet to the workbook
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Scorecard");
-    
-        // Generate the Excel file and download it
-        XLSX.writeFile(workbook, filename);
-    }
-    
-    
-
-   
-    // Event listener for the export button
-    document.getElementById("exportExcel").addEventListener("click", function () {
-        exportTableToExcel("baseball_scorecard.xlsx");
-    });
-    
-        // Function to clear inning data
-        function clearInningData() {
-            const rows = document.querySelectorAll("tbody tr");
-    
-            rows.forEach(row => {
-                // Clear all checkboxes in the inning columns
-                const checkboxes = row.querySelectorAll(".inning .score-options input[type='checkbox']");
-                checkboxes.forEach(checkbox => {
-                    checkbox.checked = false;
-                    checkbox.closest('label').classList.remove("checked");
-                });
-    
-                // Reset all diamonds to their initial state
-                const diamonds = row.querySelectorAll(".inning .diamond");
-                diamonds.forEach(diamond => {
-                    diamond.classList.remove("run-scored", "out");
-                    diamond.removeAttribute("data-label");
-                });
-            });
-    
-            // Clear the inning run count inputs
-            inningsInputs.forEach(input => {
-                input.value = "0";
-            });
-    
-            // Clear the opposing runs inputs
-            opposingInningsInputs.forEach(input => {
-                input.value = "0";
-            });
-    
-            // Update run count after clearing data
-            updateRunCount();
-        }
-    
-        // Event listener for the Clear Data button
-        const clearDataButton = document.getElementById("clearData");
-        clearDataButton.addEventListener("click", clearInningData);
-    
-        // Existing code...
-    
-        // Initial setup
-        addInitialRows();
-
-        function shufflePlayerRows() {
-            const tableBody = document.querySelector("tbody");
-            const rows = Array.from(tableBody.querySelectorAll("tr"));
-    
-            // Fisher-Yates Shuffle algorithm
-            for (let i = rows.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [rows[i], rows[j]] = [rows[j], rows[i]];
-            }
-    
-            // Clear the table body and append the shuffled rows
-            tableBody.innerHTML = '';
-            rows.forEach(row => tableBody.appendChild(row));
-    
-            // Re-initialize drag and drop functionality
-            initializeDragAndDrop();
-        }
-    
-        // Event listener for the Shuffle Players button
-        const shufflePlayersButton = document.getElementById("shufflePlayers");
-        shufflePlayersButton.addEventListener("click", shufflePlayerRows);
-    
-        // Existing code...
-    
-        // Initial setup
-        addInitialRows();
-
-        // Initialize Interact.js
-        interact('.draggable')
-        .draggable({
-        listeners: {
-        move(event) {
-        const { target } = event;
-        const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-        const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-
-        target.style.transform = `translate(${x}px, ${y}px)`;
-        target.setAttribute('data-x', x);
-        target.setAttribute('data-y', y);
-      }
-    }
-  });
-      
-  document.addEventListener('DOMContentLoaded', function () {
-    // Dropdown toggle functionality
-    const exportButton = document.getElementById('exportButton');
-    const exportDropdown = document.getElementById('exportDropdown');
-    
-    exportButton.addEventListener('click', function () {
-        exportDropdown.classList.toggle('show');
-    });
-
-    // Close dropdown if clicked outside
-    window.addEventListener('click', function (e) {
-        if (!e.target.matches('#exportButton')) {
-            exportDropdown.classList.remove('show');
-        }
-    });
-
-    // Add event listeners for export buttons
-    document.getElementById('exportCSV').addEventListener('click', function () {
-        // Your export to CSV logic here
-    });
-
-    document.getElementById('exportExcel').addEventListener('click', function () {
-        // Your export to Excel logic here
-    });
 });
 
-document.getElementById("exportButton").addEventListener("click", function() {
-    var dropdownMenu = document.getElementById("exportDropdown");
-    dropdownMenu.classList.toggle("show");
-});
 
-// Close the dropdown if the user clicks outside of it
-window.onclick = function(event) {
-    if (!event.target.matches('.dropdown-toggle')) {
-        var dropdowns = document.getElementsByClassName("dropdown-menu");
-        for (var i = 0; i < dropdowns.length; i++) {
-            var openDropdown = dropdowns[i];
-            if (openDropdown.classList.contains('show')) {
-                openDropdown.classList.remove('show');
-            }
-        }
+// Function to clear inning data
+function clearInningData() {
+    const rows = document.querySelectorAll("tbody tr");
+
+    rows.forEach(row => {
+        // Clear all checkboxes in the inning columns
+        const checkboxes = row.querySelectorAll(".inning .score-options input[type='checkbox']");
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.closest('label').classList.remove("checked");
+        });
+
+        // Reset all diamonds to their initial state
+        const diamonds = row.querySelectorAll(".inning .diamond");
+        diamonds.forEach(diamond => {
+            diamond.classList.remove("run-scored", "out");
+            diamond.removeAttribute("data-label");
+        });
+
+        // Reset the background color of the inning cells to grey
+        const inningCells = row.querySelectorAll(".inning");
+        inningCells.forEach(inningCell => {
+            inningCell.style.backgroundColor = '#f0f0f0';
+        });
+    });
+
+    // Clear the inning run count inputs
+    for (let inning = 1; inning <= 7; inning++) {
+        const runInput = document.getElementById(`runs-inning-${inning}`);
+        if (runInput) runInput.value = "0";
+
+        const opposingRunInput = document.getElementById(`opposing-runs-inning-${inning}`);
+        if (opposingRunInput) opposingRunInput.value = "0";
     }
-}
-function handleCellInputChange(event) {
-    const cell = event.target.closest('td');
-    if (cell) {
-        // Remove the untouched class when the content is changed
-        cell.classList.remove('untouched');
-    }
-}
 
-function handleCellBlur(event) {
-    const cell = event.target.closest('td');
-    if (cell) {
-        // Check if the current content matches the original content
-        if (cell.textContent.trim() === cell.getAttribute('data-original')) {
-            cell.classList.add('untouched');
-        }
-    }
+    // Reset the scoreboard display
+    totalRunsDisplay.textContent = "0";
+    totalOpposingRunsDisplay.textContent = "0";
+    currentInningDisplay.textContent = "Inning: 1";
+    currentOutsDisplay.textContent = "Outs: 0";
 }
 
 
-// scripts.js
+// Event listener for the Clear Data button
+const clearDataButton = document.getElementById("clearData");
+clearDataButton.addEventListener("click", clearInningData);
+
+
+
+// Update Opposing Runs
 function increment(id) {
     const input = document.getElementById(id);
     let value = parseInt(input.value) || 0;
@@ -782,12 +478,4 @@ function updateTotalOpposingRuns() {
     }
     document.getElementById('totalOpposingRuns').textContent = total;
 }
-
-// Ensure functions are accessible globally
-window.increment = increment;
-window.decrement = decrement;
-
-
-
-});
 

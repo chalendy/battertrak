@@ -270,13 +270,21 @@ tfoot input[type="text"] {
     background-color: #444;
 }
 
-/* Dragging state styling */
-.dragging {
-    opacity: 0.5; /* Optional: keep opacity change */
-    transform: scale(1.1); /* Scale up the dragged element */
-    border: 2px solid #000; /* Add a border to make it stand out */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Add shadow for better visibility */
+/* Placeholder row styling */
+.placeholder {
+    height: 0;
+    border: 2px dashed #333;
+    margin: 0;
+    background-color: #e0e0e0;
 }
+
+/* Enhanced dragging row style */
+.dragging {
+    opacity: 0.5;
+    border: 2px dashed #000;
+    background-color: #f0f0f0;
+}
+
 
 /* Optional: if you want the target area to have a visual indicator */
 .dragging + tr {
@@ -429,3 +437,23 @@ tfoot input[type="text"] {
         -webkit-appearance: none;
         margin: 0;
     }   
+
+    .delete-row {
+        cursor: pointer;
+        text-align: center;
+    }
+    
+    .delete-row i {
+        color: red;
+    }
+
+    .drag-handle {
+        cursor: grab;
+        padding: 0 10px;
+        text-align: center;
+        user-select: none; /* Prevent text selection while dragging */
+    }
+    
+    .dragging .drag-handle {
+        cursor: grabbing;
+    }
