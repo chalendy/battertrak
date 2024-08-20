@@ -228,20 +228,32 @@ function handleTouchStart(event) {
     }
 }
 
+function forceRepaint(element) {
+    element.style.display = 'none';
+    element.offsetHeight; // Trigger a reflow
+    element.style.display = '';
+}
+
 
 function handleTouchMove(event) {
-    if (!draggedRow) return; 
+    if (!draggedRow) return;
 
     event.preventDefault();
     const touch = event.touches[0];
     const target = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('tr');
     
-    if (target && target !== draggedRow && target.closest('tbody')) { // Ensure the target is within tbody
+    if (target && target !== draggedRow && target.closest('tbody')) {
         if (touch.clientY < target.getBoundingClientRect().top + target.getBoundingClientRect().height / 2) {
             target.parentNode.insertBefore(placeholder, target);
         } else {
             target.parentNode.insertBefore(placeholder, target.nextSibling);
         }
+        forceRepaint(placeholder);
+    }
+
+    // Ensure placeholder is always visible
+    if (placeholder && !placeholder.parentNode) {
+        target.closest('tbody').appendChild(placeholder);
     }
 }
 

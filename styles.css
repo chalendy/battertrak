@@ -272,10 +272,11 @@ tfoot input[type="text"] {
 
 /* Placeholder row styling */
 .placeholder {
-    height: 0;
+    height: 0px; /* Set a height for the placeholder row */
     border: 2px dashed #333;
     margin: 0;
     background-color: #e0e0e0;
+    display: table-row; /* Ensure it displays as a row */
 }
 
 /* Enhanced dragging row style */
